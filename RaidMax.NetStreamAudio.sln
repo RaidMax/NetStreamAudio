@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29326.143
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaidMax.NetStreamAudio.Capture", "RaidMax.NetStreamAudio.Capture\RaidMax.NetStreamAudio.Capture.csproj", "{38E8D527-C092-468A-A0D7-60A5548D2FCA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaidMax.NetStreamAudio.Core", "RaidMax.NetStreamAudio.Core\RaidMax.NetStreamAudio.Core.csproj", "{21B5B0C0-DFF4-48E7-A71E-90748308A74A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RaidMax.NetStreamAudio.Shared", "RaidMax.NetStreamAudio.Shared\RaidMax.NetStreamAudio.Shared.csproj", "{DCCE4294-7975-4E17-BA30-B9AA5AC44D89}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaidMax.NetStreamAudio.Play", "RaidMax.NetStreamAudio.Play\RaidMax.NetStreamAudio.Play.csproj", "{2E5C6DEE-8027-4637-AD03-B12C6F160BBA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{38E8D527-C092-468A-A0D7-60A5548D2FCA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{38E8D527-C092-468A-A0D7-60A5548D2FCA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{38E8D527-C092-468A-A0D7-60A5548D2FCA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{38E8D527-C092-468A-A0D7-60A5548D2FCA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21B5B0C0-DFF4-48E7-A71E-90748308A74A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21B5B0C0-DFF4-48E7-A71E-90748308A74A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21B5B0C0-DFF4-48E7-A71E-90748308A74A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21B5B0C0-DFF4-48E7-A71E-90748308A74A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCCE4294-7975-4E17-BA30-B9AA5AC44D89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCCE4294-7975-4E17-BA30-B9AA5AC44D89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCCE4294-7975-4E17-BA30-B9AA5AC44D89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCCE4294-7975-4E17-BA30-B9AA5AC44D89}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E5C6DEE-8027-4637-AD03-B12C6F160BBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E5C6DEE-8027-4637-AD03-B12C6F160BBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E5C6DEE-8027-4637-AD03-B12C6F160BBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E5C6DEE-8027-4637-AD03-B12C6F160BBA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {920159DF-FECC-4677-996B-FA9ACBA660AF}
+	EndGlobalSection
+EndGlobal

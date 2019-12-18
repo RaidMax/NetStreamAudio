@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "RaidMax.NetStreamAudio.Capture": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
