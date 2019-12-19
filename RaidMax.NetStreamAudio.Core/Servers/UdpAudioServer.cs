@@ -38,25 +38,28 @@ namespace RaidMax.NetStreamAudio.Core.Servers
         }
 
         /// <inheritdoc/>
-        public async Task Start(CancellationToken token)
+        public async Task<IStopResult> Start(CancellationToken token)
         {
             _logger.LogDebug("Starting UdpAudioServer");
 
             StopFinished.Reset();
             this.token = token;
-            bindingEndpoint = new IPEndPoint(IPAddress.Any, _config.Port);
-
-            udpServerSocket = new Socket(
-                addressFamily: bindingEndpoint.AddressFamily,
-                socketType: SocketType.Dgram,
-                protocolType: ProtocolType.Udp);
-            udpServerSocket.Bind(bindingEndpoint);
-
-            _logger.LogInformation("Binding to {0}", bindingEndpoint.ToString());
-            _logger.LogInformation("Waiting for clients to connect");
+            var stopResult = new StopResult();
 
             try
             {
+                bindingEndpoint = new IPEndPoint(IPAddress.Any, _config.Port);
+
+                udpServerSocket = new Socket(
+                    addressFamily: bindingEndpoint.AddressFamily,
+                    socketType: SocketType.Dgram,
+                    protocolType: ProtocolType.Udp);
+                udpServerSocket.Bind(bindingEndpoint);
+
+                _logger.LogInformation("Binding to {0}", bindingEndpoint.ToString());
+                _logger.LogInformation("Waiting for clients to connect");
+
+
                 while (true)
                 {
                     var newClientState = new UdpSocketState()
@@ -88,12 +91,15 @@ namespace RaidMax.NetStreamAudio.Core.Servers
             catch (Exception e)
             {
                 _logger.LogError(e, "Unexpected error in UdpAudioServer");
+                stopResult.ResultType = StopResultType.Unexpected;
             }
 
             finally
             {
                 Stop();
             }
+
+            return stopResult;
         }
 
         /// <inheritdoc/>
@@ -197,7 +203,8 @@ namespace RaidMax.NetStreamAudio.Core.Servers
                 _socketStates.Add(source, new UdpSocketState()
                 {
                     RemoteEndPoint = endpoint,
-                    StateSocket = udpServerSocket
+                    StateSocket = udpServerSocket,
+                    LastMessageTime = _dateTimeProvider.CurrentDateTime
                 });
             }
 

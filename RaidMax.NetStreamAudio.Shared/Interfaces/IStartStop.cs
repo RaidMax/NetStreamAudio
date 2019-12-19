@@ -13,7 +13,7 @@ namespace RaidMax.NetStreamAudio.Shared.Interfaces
         /// </summary>
         /// <param name="token">Cancellation token</param>
         /// <returns></returns>
-        Task Start(CancellationToken token);
+        Task<IStopResult> Start(CancellationToken token);
 
         /// <summary>
         /// Waiter that signals when the works is finished

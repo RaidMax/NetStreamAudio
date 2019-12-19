@@ -1,4 +1,5 @@
-﻿using RaidMax.NetStreamAudio.Shared.Interfaces;
+﻿using RaidMax.NetStreamAudio.Core.Helpers;
+using RaidMax.NetStreamAudio.Shared.Interfaces;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,7 +16,6 @@ namespace RaidMax.NetStreamAudio.Core
         public event EventHandler<EventArgs> OnTimerTick;
         private readonly Timer _timer;
         private readonly int _interval;
-        private CancellationToken token;
 
         public TimerInterval(int interval)
         {
@@ -24,13 +24,24 @@ namespace RaidMax.NetStreamAudio.Core
         }
 
         /// <inheritdoc/>
-        public Task Start(CancellationToken token)
+        public async Task<IStopResult> Start(CancellationToken token)
         {
             StopFinished.Reset();
-            this.token = token;
             _timer.Change(_interval, _interval);
- 
-            return Task.CompletedTask;
+
+            try
+            {
+                await Task.Delay(-1, token);
+            }
+
+            catch { }
+
+            finally
+            {
+                Stop();
+            }
+
+            return new StopResult();
         }
 
         /// <summary>
@@ -52,14 +63,9 @@ namespace RaidMax.NetStreamAudio.Core
         /// <param name="state">state object of the timer</param>
         private void TimerTicked(object state)
         {
-            if (!token.IsCancellationRequested)
+            if (!StopFinished.IsSet)
             {
                 OnTimerTick?.Invoke(this, new EventArgs());
-            }
-
-            else
-            {
-                Stop();
             }
         }
     }

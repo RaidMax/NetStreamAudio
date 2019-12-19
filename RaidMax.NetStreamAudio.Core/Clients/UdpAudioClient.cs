@@ -42,7 +42,7 @@ namespace RaidMax.NetStreamAudio.Core.Players
         }
 
         /// <inheritdoc/>
-        public async Task Start(CancellationToken token)
+        public async Task<IStopResult> Start(CancellationToken token)
         {
             _logger.LogDebug("Starting UdpAudioClient");
 
@@ -53,13 +53,15 @@ namespace RaidMax.NetStreamAudio.Core.Players
                 throw new InvalidOperationException("Client must be stopped before starting");
             }
 
-            udpClient = new UdpClient();
-            _logger.LogDebug("Attaching to {0}", _serverEndpoint.ToString());
-
-            var attachCommand = GenerateAttachCommand().GeneratePayload();
+            var stopResult = new StopResult();
 
             try
             {
+                udpClient = new UdpClient();
+                _logger.LogDebug("Attaching to {0}", _serverEndpoint.ToString());
+
+                var attachCommand = GenerateAttachCommand().GeneratePayload();
+
                 await udpClient.SendAsync(attachCommand, attachCommand.Length, _serverEndpoint);
 
                 var state = new UdpSocketState()
@@ -68,7 +70,8 @@ namespace RaidMax.NetStreamAudio.Core.Players
                     RemoteEndPoint = _serverEndpoint
                 };
 
-                await _timerInterval.Start(token);
+                var timerResult = await _timerInterval.Start(token);
+                stopResult.ResultType = timerResult.ResultType;
 
                 while (true)
                 {
@@ -87,20 +90,23 @@ namespace RaidMax.NetStreamAudio.Core.Players
 
             }
 
-            catch (SocketException e)
+            catch (SocketException)
             {
-                _logger.LogError(e, "Failed to communicate with {0}", _serverEndpoint.ToString());
+
             }
 
             catch (Exception e)
             {
                 _logger.LogError(e, "Unexpected error in UdpAudioClient");
+                stopResult.ResultType = StopResultType.Unexpected;
             }
 
             finally
             {
                 await Stop();
             }
+
+            return stopResult;
         }
 
         /// <summary>

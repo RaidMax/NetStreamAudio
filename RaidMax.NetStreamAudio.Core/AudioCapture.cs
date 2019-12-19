@@ -2,7 +2,9 @@
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using RaidMax.NetStreamAudio.Core.Events;
+using RaidMax.NetStreamAudio.Core.Helpers;
 using RaidMax.NetStreamAudio.Shared.Configuration;
+using RaidMax.NetStreamAudio.Shared.Enumerations;
 using RaidMax.NetStreamAudio.Shared.Interfaces;
 using System;
 using System.Threading;
@@ -27,7 +29,7 @@ namespace RaidMax.NetStreamAudio.Core
         }
 
         /// <inheritdoc/>
-        public async Task Start(CancellationToken token)
+        public async Task<IStopResult> Start(CancellationToken token)
         {
             if (captureInstance != null)
             {
@@ -36,25 +38,28 @@ namespace RaidMax.NetStreamAudio.Core
 
             _logger.LogDebug("Starting AudioCapture");
 
-            captureInstance = new WasapiLoopbackCapture()
-            {
-                ShareMode = NAudio.CoreAudioApi.AudioClientShareMode.Shared
-            };
-
-            targetFormat = new WaveFormat(_config.AudioCapture.DesiredSampleRate, _config.AudioCapture.DesiredChannelCount);
-
-            captureInstance.DataAvailable += OnDataAvailable;
-            captureInstance.RecordingStopped += OnCaptureStopped;
-            captureInstance.StartRecording();
+            var stopResult = new StopResult();
 
             try
             {
-                await _audioServer.Start(token);
+                captureInstance = new WasapiLoopbackCapture()
+                {
+                    ShareMode = NAudio.CoreAudioApi.AudioClientShareMode.Shared
+                };
+
+                targetFormat = new WaveFormat(_config.AudioCapture.DesiredSampleRate, _config.AudioCapture.DesiredChannelCount);
+
+                captureInstance.DataAvailable += OnDataAvailable;
+                captureInstance.RecordingStopped += OnCaptureStopped;
+                captureInstance.StartRecording();
+
+                var audioServerResult = await _audioServer.Start(token);
+                stopResult.ResultType = audioServerResult.ResultType;
             }
 
             catch (TaskCanceledException)
             {
-                
+
             }
 
             catch (OperationCanceledException)
@@ -65,12 +70,15 @@ namespace RaidMax.NetStreamAudio.Core
             catch (Exception e)
             {
                 _logger.LogError(e, "Unexpected error in AudioCapture");
+                stopResult.ResultType = StopResultType.Unexpected;
             }
 
             finally
             {
                 Stop();
             }
+
+            return stopResult;
         }
 
         /// <summary>

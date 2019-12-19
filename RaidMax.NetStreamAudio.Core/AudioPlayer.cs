@@ -1,7 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using RaidMax.NetStreamAudio.Core.Helpers;
 using RaidMax.NetStreamAudio.Shared.Configuration;
+using RaidMax.NetStreamAudio.Shared.Enumerations;
 using RaidMax.NetStreamAudio.Shared.Interfaces;
 using System;
 using System.Threading;
@@ -26,56 +28,61 @@ namespace RaidMax.NetStreamAudio.Core
         }
 
         /// <inheritdoc/>
-        public async Task Start(CancellationToken token)
+        public async Task<IStopResult> Start(CancellationToken token)
         {
             _logger.LogDebug("Starting AudioPlayer");
 
             StopFinished.Reset();
             _audioClient.OnAudioReceived += OnAudioReceived;
 
-            waveOut = new WaveOutEvent()
-            {
-                Volume = 1.0f,
-                DesiredLatency = _config.AudioPlayer.TargetLatencyMilliseconds
-            };
-
-            // we want to know which device we're playing on so we can set the format
-            // todo: allow user's to specify which device they want to use
-            using var deviceEnumerator = new MMDeviceEnumerator();
-            var defaultDevice = deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-            var deviceMixFormat = defaultDevice.AudioClient.MixFormat;
-            var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(deviceMixFormat.SampleRate, deviceMixFormat.Channels);
-
-            _logger.LogInformation("Playing on {0} at {1}:{2}", defaultDevice.FriendlyName, deviceMixFormat.SampleRate, deviceMixFormat.Channels);
-
-            waveProvider = new BufferedWaveProvider(waveFormat);
-            waveOut.Init(waveProvider);
-            waveOut.Play();
+            var stopResult = new StopResult();
 
             try
             {
-                await _audioClient.Start(token);
+                waveOut = new WaveOutEvent()
+                {
+                    Volume = 1.0f,
+                    DesiredLatency = _config.AudioPlayer.TargetLatencyMilliseconds
+                };
+
+                // we want to know which device we're playing on so we can set the format
+                // todo: allow user's to specify which device they want to use
+                using var deviceEnumerator = new MMDeviceEnumerator();
+                var defaultDevice = deviceEnumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
+                var deviceMixFormat = defaultDevice.AudioClient.MixFormat;
+                var waveFormat = WaveFormat.CreateIeeeFloatWaveFormat(deviceMixFormat.SampleRate, deviceMixFormat.Channels);
+
+                _logger.LogInformation("Playing on {0} at {1}:{2}", defaultDevice.FriendlyName, deviceMixFormat.SampleRate, deviceMixFormat.Channels);
+
+                waveProvider = new BufferedWaveProvider(waveFormat);
+                waveOut.Init(waveProvider);
+                waveOut.Play();
+
+
+                var audioClientResult = await _audioClient.Start(token);
+                stopResult.ResultType = audioClientResult.ResultType;
             }
 
             catch (TaskCanceledException)
             {
-
             }
 
             catch (OperationCanceledException)
             {
-
             }
 
             catch (Exception e)
             {
                 _logger.LogError(e, "Unexpected error in AudioPlayer");
+                stopResult.ResultType = StopResultType.Unexpected;
             }
 
             finally
             {
                 Stop();
             }
+
+            return stopResult;
         }
 
         /// <summary>

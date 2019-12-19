@@ -5,6 +5,7 @@ using RaidMax.NetStreamAudio.Core;
 using RaidMax.NetStreamAudio.Core.Players;
 using RaidMax.NetStreamAudio.Shared;
 using RaidMax.NetStreamAudio.Shared.Configuration;
+using RaidMax.NetStreamAudio.Shared.Enumerations;
 using RaidMax.NetStreamAudio.Shared.Interfaces;
 using System;
 using System.IO;
@@ -21,6 +22,7 @@ namespace RaidMax.NetStreamAudio.Play
         public static async Task Main(string[] args)
         {
             ILogger fallbackLogger = null;
+            IStopResult stopResult = null;
 
             try
             {
@@ -40,7 +42,7 @@ namespace RaidMax.NetStreamAudio.Play
                 AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
                 Console.CancelKeyPress += OnProcessExit;
 
-                await audioPlayer.Start(cancellationSource.Token);
+                stopResult = await audioPlayer.Start(cancellationSource.Token);
             }
 
             catch (Exception e)
@@ -57,25 +59,28 @@ namespace RaidMax.NetStreamAudio.Play
                     Console.WriteLine(e.StackTrace);
                 }
 
-                if (Utilities.IsDevelopment)
+                if (stopResult != null)
                 {
-                    throw e;
-                }
-
-                if (!Utilities.IsDevelopment)
-                {
-                    fallbackLogger?.LogInformation("Press any key to exit...");
-                    Console.ReadKey();
+                    stopResult.ResultType = StopResultType.Unexpected;
                 }
 
                 OnProcessExit(null, null);
             }
 
-            audioPlayer.StopFinished.Wait();
-
-            if (Utilities.IsDevelopment)
+            finally
             {
-                Environment.Exit(0);
+                if ((stopResult == null || stopResult.ResultType == StopResultType.Unexpected) && !Utilities.IsDevelopment)
+                {
+                    fallbackLogger?.LogInformation("Press any key to exit...");
+                    Console.ReadKey();
+                }
+
+                if (stopResult != null)
+                {
+                    audioPlayer.StopFinished.Wait();
+                }
+
+                cancellationSource.Dispose();
             }
         }
 
@@ -87,13 +92,9 @@ namespace RaidMax.NetStreamAudio.Play
         /// <param name="e">event arguments</param>
         private static void OnProcessExit(object sender, EventArgs e)
         {
-            if (!cancellationSource.IsCancellationRequested)
+            if (!audioPlayer.StopFinished.IsSet)
             {
-                AppDomain.CurrentDomain.ProcessExit -= OnProcessExit;
-                Console.CancelKeyPress -= OnProcessExit;
-
                 cancellationSource.Cancel();
-                cancellationSource.Dispose();
             }
         }
 
