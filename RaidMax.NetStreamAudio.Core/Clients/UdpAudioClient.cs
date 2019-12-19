@@ -70,14 +70,11 @@ namespace RaidMax.NetStreamAudio.Core.Players
                     RemoteEndPoint = _serverEndpoint
                 };
 
-                var timerResult = await _timerInterval.Start(token);
-                stopResult.ResultType = timerResult.ResultType;
-
-                while (true)
+                await Task.WhenAll(new[]
                 {
-                    udpClient.BeginReceive(new AsyncCallback(OnDataReceivedFromServer), state);
-                    await state.ReceiveWaiter.WaitAsync(token);
-                }
+                    _timerInterval.Start(token), 
+                    ReceiveLoop(state, token)
+                });
             }
 
             catch (TaskCanceledException)
@@ -107,6 +104,21 @@ namespace RaidMax.NetStreamAudio.Core.Players
             }
 
             return stopResult;
+        }
+
+        /// <summary>
+        /// Runs the client loop waiting for audio data
+        /// </summary>
+        /// <param name="state">state of the socket</param>
+        /// <param name="token">cancellation token</param>
+        /// <returns></returns>
+        private async Task ReceiveLoop(UdpSocketState state, CancellationToken token)
+        {
+            while (true)
+            {
+                udpClient.BeginReceive(new AsyncCallback(OnDataReceivedFromServer), state);
+                await state.ReceiveWaiter.WaitAsync(token);
+            }
         }
 
         /// <summary>
